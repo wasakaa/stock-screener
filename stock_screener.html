@@ -196,7 +196,7 @@
         let currentCharts = [];
 
         // Load data
-        fetch('stocks_data.json')
+        fetch('stocks_data_with_indicators.json')    // ✅ MỚI
             .then(res => res.json())
             .then(data => {
                 allStocks = data.stocks;
