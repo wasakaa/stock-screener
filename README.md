@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/status-active-success.svg)](https://wasakaa.github.io/stock-screener)
 
-🌐 **Live Demo**: [https://wasakaa.github.io/stock-screener/stock_screener_ai_pro.html](https://wasakaa.github.io/stock-screener/stock_screener_ai_pro.html)
+🌐 **Live Demo**: [https://wasakaa.github.io/stock-screener/stock_screener_v2_liquidity.html](https://wasakaa.github.io/stock-screener/stock_screener_v2_liquidity.html)
 
 ---
 
