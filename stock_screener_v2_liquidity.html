@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Screener AI v2.1 - Liquidity System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .version-badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h3 {
+            color: #667eea;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .stat-card .number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .filters {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .filters h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        select, input {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .stock-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .stock-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .stock-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .stock-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .stock-ticker {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .exchange-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .exchange-HNX { background: #3b82f6; color: white; }
+        .exchange-UPCOM { background: #10b981; color: white; }
+        .exchange-HOSE { background: #8b5cf6; color: white; }
+
+        .liquidity-badge {
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        .liquidity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .liquidity-title {
+            font-size: 1em;
+            font-weight: bold;
+        }
+
+        .liquidity-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            font-size: 0.85em;
+            color: rgba(255,255,255,0.95);
+        }
+
+        .liquidity-warnings {
+            margin-top: 10px;
+            padding: 8px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 6px;
+            font-size: 0.85em;
+        }
+
+        .liquidity-warning-item {
+            margin: 3px 0;
+        }
+
+        .price-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .price {
+            font-size: 2em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .change-badge {
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .change-positive { background: #10b981; color: white; }
+        .change-negative { background: #ef4444; color: white; }
+
+        .ai-recommendation {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            text-align: center;
+            font-size: 1.1em;
+        }
+
+        .ai-STRONG_BUY { background: #10b981; color: white; }
+        .ai-BUY { background: #3b82f6; color: white; }
+        .ai-WEAK_BUY { background: #f59e0b; color: white; }
+        .ai-HOLD { background: #6b7280; color: white; }
+        .ai-WEAK_SELL { background: #f97316; color: white; }
+        .ai-SELL { background: #ef4444; color: white; }
+
+        .trading-style {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #f0f9ff;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .indicators {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .indicator {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .indicator-label {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .indicator-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .view-chart-btn {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .view-chart-btn:hover {
+            background: #5568d3;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 2% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: white;
+            font-size: 1.5em;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 50px;
+            background: white;
+            border-radius: 15px;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .stock-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 Stock Screener AI Pro</h1>
+            <p>Phân tích thông minh với 4 tầng AI + Hệ thống đánh giá thanh khoản</p>
+            <div class="version-badge">v2.1 - Liquidity System</div>
+            <p style="margin-top: 10px; font-size: 0.9em;">Cập nhật: <span id="lastUpdate"></span></p>
+        </header>
+
+        <div class="stats-grid" id="statsGrid"></div>
+
+        <div class="filters">
+            <h2>🔍 Bộ lọc</h2>
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label>Sàn</label>
+                    <select id="exchangeFilter">
+                        <option value="ALL">Tất cả sàn</option>
+                        <option value="HNX">HNX</option>
+                        <option value="UPCOM">UPCOM</option>
+                        <option value="HOSE">HOSE</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Thanh khoản</label>
+                    <select id="liquidityFilter">
+                        <option value="ALL">Tất cả mức</option>
+                        <option value="SAFE">Chỉ mã an toàn (≥6)</option>
+                        <option value="EXCELLENT">🟢 Xuất sắc (8-10)</option>
+                        <option value="GOOD">🟡 Tốt (6-8)</option>
+                        <option value="MODERATE">🟠 Trung bình (4-6)</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>AI Khuyến nghị</label>
+                    <select id="aiFilter">
+                        <option value="ALL">Tất cả</option>
+                        <option value="BUY">Chỉ MUA</option>
+                        <option value="STRONG_BUY">MUA MẠNH</option>
+                        <option value="HOLD">GIỮ</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Phong cách</label>
+                    <select id="styleFilter">
+                        <option value="ALL">Tất cả</option>
+                        <option value="SWING">Lướt sóng</option>
+                        <option value="LONGTERM">Dài hạn</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label>Tìm kiếm mã</label>
+                    <input type="text" id="searchInput" placeholder="Nhập mã cổ phiếu...">
+                </div>
+            </div>
+        </div>
+
+        <div id="loading" class="loading">⏳ Đang tải dữ liệu...</div>
+        <div id="noResults" class="no-results" style="display: none;">
+            ❌ Không tìm thấy kết quả phù hợp
+        </div>
+        <div class="stock-grid" id="stockGrid"></div>
+    </div>
+
+    <div id="chartModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let allStocks = [];
+        let filteredStocks = [];
+
+        fetch('stocks_data_ai_complete.json')
+            .then(response => response.json())
+            .then(data => {
+                allStocks = data.stocks;
+                document.getElementById('lastUpdate').textContent = data.last_update;
+                renderStats(data);
+                applyFilters();
+            })
+            .catch(error => {
+                document.getElementById('loading').textContent = '❌ Lỗi tải dữ liệu: ' + error;
+            });
+
+        function renderStats(data) {
+            const stats = [
+                { title: 'Tổng số mã', value: data.total_stocks, color: '#667eea' },
+                { title: 'Mã an toàn (≥6)', value: data.liquidity_levels ? (data.liquidity_levels.excellent + data.liquidity_levels.good) : 'N/A', color: '#10b981' },
+                { title: 'Strong Buy', value: data.statistics.strong_buy, color: '#10b981' },
+                { title: 'Lướt sóng', value: data.statistics.swing_trading, color: '#f59e0b' },
+                { title: 'AI Override', value: data.statistics.liquidity_overridden || 0, color: '#ef4444' }
+            ];
+
+            const statsHTML = stats.map(stat => `
+                <div class="stat-card">
+                    <h3>${stat.title}</h3>
+                    <div class="number" style="color: ${stat.color}">${stat.value}</div>
+                </div>
+            `).join('');
+
+            document.getElementById('statsGrid').innerHTML = statsHTML;
+        }
+
+        function renderStockCard(stock) {
+            const liq = stock.liquidity || {};
+            const hasLiquidity = liq.score !== undefined;
+
+            const liquidityHTML = hasLiquidity ? `
+                <div class="liquidity-badge" style="background: ${liq.color}">
+                    <div class="liquidity-header">
+                        <div class="liquidity-title">
+                            Thanh khoản: ${liq.label}
+                        </div>
+                        <div style="font-weight: bold; font-size: 1.2em;">
+                            ${liq.score}/10
+                        </div>
+                    </div>
+                    <div class="liquidity-details">
+                        <div>Exit: ${liq.exit_time}</div>
+                        <div>Avg Vol: ${liq.avg_volume_formatted}</div>
+                        <div style="grid-column: 1 / -1;">Max vốn: ${liq.max_capital}</div>
+                    </div>
+                    ${liq.warnings && liq.warnings.length > 0 ? `
+                        <div class="liquidity-warnings">
+                            ${liq.warnings.map(w => `<div class="liquidity-warning-item">${w}</div>`).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            ` : '';
+
+            return `
+                <div class="stock-card" onclick="showChart('${stock.ticker}')">
+                    <div class="stock-header">
+                        <div class="stock-ticker">${stock.ticker}</div>
+                        <div class="exchange-badge exchange-${stock.exchange}">${stock.exchange}</div>
+                    </div>
+
+                    ${liquidityHTML}
+
+                    <div class="price-section">
+                        <div class="price">${stock.price.toLocaleString()}</div>
+                        <div class="change-badge ${stock.change_10d >= 0 ? 'change-positive' : 'change-negative'}">
+                            ${stock.change_10d >= 0 ? '+' : ''}${stock.change_10d}%
+                        </div>
+                    </div>
+
+                    <div class="ai-recommendation ai-${stock.ai_ensemble.final_action}">
+                        ${stock.ai_ensemble.final_label}
+                        <div style="font-size: 0.85em; margin-top: 5px;">
+                            Confidence: ${stock.ai_ensemble.confidence}% | Score: ${stock.ai_ensemble.composite_score}/10
+                        </div>
+                    </div>
+
+                    <div class="trading-style">
+                        <div style="font-size: 1.5em;">${stock.trading_style.style_label.split(' ')[0]}</div>
+                        <div>
+                            <div style="font-weight: 600;">${stock.trading_style.style_label}</div>
+                            <div style="font-size: 0.85em; color: #666;">${stock.trading_style.holding_period}</div>
+                        </div>
+                    </div>
+
+                    <div class="indicators">
+                        <div class="indicator">
+                            <div class="indicator-label">RSI</div>
+                            <div class="indicator-value" style="color: ${stock.rsi < 30 ? '#10b981' : stock.rsi > 70 ? '#ef4444' : '#333'}">${stock.rsi}</div>
+                        </div>
+                        <div class="indicator">
+                            <div class="indicator-label">Volume</div>
+                            <div class="indicator-value">${(stock.avg_volume/1000).toFixed(0)}K</div>
+                        </div>
+                        <div class="indicator">
+                            <div class="indicator-label">Volatility</div>
+                            <div class="indicator-value">${stock.volatility.toFixed(1)}%</div>
+                        </div>
+                        <div class="indicator">
+                            <div class="indicator-label">MACD</div>
+                            <div class="indicator-value" style="color: ${stock.macd > stock.macd_signal ? '#10b981' : '#ef4444'}">${stock.macd > stock.macd_signal ? '↑' : '↓'}</div>
+                        </div>
+                    </div>
+
+                    <button class="view-chart-btn" onclick="event.stopPropagation(); showChart('${stock.ticker}')">
+                        📊 Xem biểu đồ & chi tiết
+                    </button>
+                </div>
+            `;
+        }
+
+        function applyFilters() {
+            const exchange = document.getElementById('exchangeFilter').value;
+            const liquidity = document.getElementById('liquidityFilter').value;
+            const ai = document.getElementById('aiFilter').value;
+            const style = document.getElementById('styleFilter').value;
+            const search = document.getElementById('searchInput').value.toUpperCase();
+
+            filteredStocks = allStocks.filter(stock => {
+                const liq = stock.liquidity || {};
+
+                if (exchange !== 'ALL' && stock.exchange !== exchange) return false;
+
+                if (liquidity === 'SAFE' && (!liq.trade_safe)) return false;
+                if (liquidity === 'EXCELLENT' && (liq.score < 8)) return false;
+                if (liquidity === 'GOOD' && (liq.score < 6 || liq.score >= 8)) return false;
+                if (liquidity === 'MODERATE' && (liq.score < 4 || liq.score >= 6)) return false;
+
+                if (ai !== 'ALL' && !stock.ai_ensemble.final_action.includes(ai)) return false;
+                if (style !== 'ALL' && stock.trading_style.recommended_style !== style) return false;
+                if (search && !stock.ticker.includes(search)) return false;
+
+                return true;
+            });
+
+            renderStocks();
+        }
+
+        function renderStocks() {
+            document.getElementById('loading').style.display = 'none';
+            const grid = document.getElementById('stockGrid');
+            const noResults = document.getElementById('noResults');
+
+            if (filteredStocks.length === 0) {
+                grid.innerHTML = '';
+                noResults.style.display = 'block';
+            } else {
+                noResults.style.display = 'none';
+                grid.innerHTML = filteredStocks.map(stock => renderStockCard(stock)).join('');
+            }
+        }
+
+        function showChart(ticker) {
+            const stock = allStocks.find(s => s.ticker === ticker);
+            if (!stock) return;
+
+            const liq = stock.liquidity || {};
+            const modal = document.getElementById('chartModal');
+            const content = document.getElementById('modalContent');
+
+            content.innerHTML = `
+                <h2 style="margin-bottom: 20px;">${stock.ticker} - ${stock.exchange}</h2>
+
+                ${liq.score !== undefined ? `
+                    <div class="liquidity-badge" style="background: ${liq.color}; margin-bottom: 20px;">
+                        <div class="liquidity-header">
+                            <div class="liquidity-title">Thanh khoản: ${liq.label}</div>
+                            <div style="font-weight: bold; font-size: 1.3em;">${liq.score}/10</div>
+                        </div>
+                        <div class="liquidity-details">
+                            <div>Exit time: ${liq.exit_time}</div>
+                            <div>Risk: ${liq.risk_level}</div>
+                            <div>Avg Volume: ${liq.avg_volume_formatted}</div>
+                            <div>Max vốn: ${liq.max_capital}</div>
+                        </div>
+                        ${liq.recommendations && liq.recommendations.length > 0 ? `
+                            <div style="margin-top: 10px; padding: 8px; background: rgba(255,255,255,0.2); border-radius: 6px;">
+                                ${liq.recommendations.map(r => `<div style="font-size: 0.9em; margin: 3px 0;">✅ ${r}</div>`).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                ` : ''}
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
+                        <h3>🤖 AI Analysis</h3>
+                        <p><strong>Recommendation:</strong> ${stock.ai_ensemble.final_label}</p>
+                        <p><strong>Score:</strong> ${stock.ai_ensemble.composite_score}/10</p>
+                        <p><strong>Entry:</strong> ${stock.ai_ensemble.entry_zone}</p>
+                        <p><strong>Target:</strong> ${stock.ai_ensemble.target_zone}</p>
+                        <p><strong>Stop Loss:</strong> ${stock.ai_ensemble.stop_loss}</p>
+                    </div>
+
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
+                        <h3>📊 Technical</h3>
+                        <p><strong>RSI:</strong> ${stock.rsi}</p>
+                        <p><strong>MACD:</strong> ${stock.macd.toFixed(3)}</p>
+                        <p><strong>MA20:</strong> ${stock.ma20.toFixed(2)}</p>
+                        <p><strong>MA50:</strong> ${stock.ma50.toFixed(2)}</p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 10px;">
+                    <strong>⚠️ Disclaimer:</strong> Thông tin chỉ mang tính tham khảo. Không phải lời khuyên đầu tư.
+                    ${liq.score < 6 ? '<br><strong style="color: #ef4444;">⚠️ LƯU Ý: Thanh khoản thấp - Cẩn thận khi đặt lệnh!</strong>' : ''}
+                </div>
+            `;
+
+            modal.style.display = 'block';
+        }
+
+        document.getElementById('exchangeFilter').addEventListener('change', applyFilters);
+        document.getElementById('liquidityFilter').addEventListener('change', applyFilters);
+        document.getElementById('aiFilter').addEventListener('change', applyFilters);
+        document.getElementById('styleFilter').addEventListener('change', applyFilters);
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+
+        document.querySelector('.close').onclick = function() {
+            document.getElementById('chartModal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('chartModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
