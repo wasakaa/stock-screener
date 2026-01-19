@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Screener - HNX & UPCOM</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .update-time {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .filters {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+        }
+
+        .filter-group select, .filter-group input {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 32px;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .stock-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .stock-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .stock-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .stock-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .ticker {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .exchange {
+            background: #764ba2;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .price {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .metric {
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .metric-label {
+            color: #666;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .metric-value {
+            font-weight: 600;
+            margin-top: 3px;
+        }
+
+        .positive {
+            color: #10b981;
+        }
+
+        .negative {
+            color: #ef4444;
+        }
+
+        .signals {
+            margin-top: 15px;
+        }
+
+        .signal-tag {
+            display: inline-block;
+            padding: 6px 12px;
+            margin: 4px 4px 4px 0;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            background: #f0f0f0;
+        }
+
+        .score-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .stock-card {
+            position: relative;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px;
+            background: white;
+            border-radius: 12px;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .stock-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📈 Stock Screener - HNX & UPCOM</h1>
+            <p class="update-time">Cập nhật: <span id="lastUpdate"></span></p>
+        </header>
+
+        <div class="stats">
+            <div class="stat-card">
+                <h3 id="totalStocks">0</h3>
+                <p>Tổng số mã</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="signalStocks">0</h3>
+                <p>Mã có signal</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="uptrendStocks">0</h3>
+                <p>Uptrend mạnh</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="volumeSpike">0</h3>
+                <p>Volume spike</p>
+            </div>
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label>Sàn:</label>
+                <select id="exchangeFilter">
+                    <option value="ALL">Tất cả</option>
+                    <option value="HNX">HNX</option>
+                    <option value="UPCOM">UPCOM</option>
+                </select>
+
+                <label>Signal:</label>
+                <select id="signalFilter">
+                    <option value="ALL">Tất cả</option>
+                    <option value="HAS_SIGNAL">Có signal</option>
+                    <option value="UPTREND">Uptrend</option>
+                    <option value="REVERSAL">Reversal</option>
+                    <option value="VOLUME">Volume spike</option>
+                </select>
+
+                <label>Sắp xếp:</label>
+                <select id="sortFilter">
+                    <option value="score">Score cao nhất</option>
+                    <option value="change_30d">Tăng mạnh 30d</option>
+                    <option value="vol_spike">Volume spike</option>
+                    <option value="ticker">Theo mã</option>
+                </select>
+
+                <label>Tìm mã:</label>
+                <input type="text" id="searchTicker" placeholder="VD: CEO, KCB...">
+            </div>
+        </div>
+
+        <div id="stockGrid" class="stock-grid"></div>
+    </div>
+
+    <script>
+        let allStocks = [];
+
+        // Load data
+        fetch('stocks_data.json')
+            .then(res => res.json())
+            .then(data => {
+                allStocks = data.stocks;
+                document.getElementById('lastUpdate').textContent = data.last_update;
+                document.getElementById('totalStocks').textContent = data.total_stocks;
+
+                // Calculate stats
+                const withSignals = allStocks.filter(s => s.signals.length > 0).length;
+                const uptrend = allStocks.filter(s => s.signals.some(sig => sig.includes('Uptrend'))).length;
+                const volumeSpike = allStocks.filter(s => s.vol_spike > 1.5).length;
+
+                document.getElementById('signalStocks').textContent = withSignals;
+                document.getElementById('uptrendStocks').textContent = uptrend;
+                document.getElementById('volumeSpike').textContent = volumeSpike;
+
+                renderStocks(allStocks);
+            });
+
+        // Filters
+        document.getElementById('exchangeFilter').addEventListener('change', applyFilters);
+        document.getElementById('signalFilter').addEventListener('change', applyFilters);
+        document.getElementById('sortFilter').addEventListener('change', applyFilters);
+        document.getElementById('searchTicker').addEventListener('input', applyFilters);
+
+        function applyFilters() {
+            let filtered = [...allStocks];
+
+            // Exchange filter
+            const exchange = document.getElementById('exchangeFilter').value;
+            if (exchange !== 'ALL') {
+                filtered = filtered.filter(s => s.exchange === exchange);
+            }
+
+            // Signal filter
+            const signal = document.getElementById('signalFilter').value;
+            if (signal === 'HAS_SIGNAL') {
+                filtered = filtered.filter(s => s.signals.length > 0);
+            } else if (signal === 'UPTREND') {
+                filtered = filtered.filter(s => s.signals.some(sig => sig.includes('Uptrend')));
+            } else if (signal === 'REVERSAL') {
+                filtered = filtered.filter(s => s.signals.some(sig => sig.includes('Reversal')));
+            } else if (signal === 'VOLUME') {
+                filtered = filtered.filter(s => s.vol_spike > 1.5);
+            }
+
+            // Search
+            const search = document.getElementById('searchTicker').value.toUpperCase();
+            if (search) {
+                filtered = filtered.filter(s => s.ticker.includes(search));
+            }
+
+            // Sort
+            const sort = document.getElementById('sortFilter').value;
+            filtered.sort((a, b) => {
+                if (sort === 'score') return b.score - a.score;
+                if (sort === 'change_30d') return b.change_30d - a.change_30d;
+                if (sort === 'vol_spike') return b.vol_spike - a.vol_spike;
+                if (sort === 'ticker') return a.ticker.localeCompare(b.ticker);
+                return 0;
+            });
+
+            renderStocks(filtered);
+        }
+
+        function renderStocks(stocks) {
+            const grid = document.getElementById('stockGrid');
+
+            if (stocks.length === 0) {
+                grid.innerHTML = '<div class="no-results">Không tìm thấy mã nào phù hợp</div>';
+                return;
+            }
+
+            grid.innerHTML = stocks.map(stock => `
+                <div class="stock-card">
+                    ${stock.score > 0 ? `<div class="score-badge">${stock.score}</div>` : ''}
+                    <div class="stock-header">
+                        <div class="ticker">${stock.ticker}</div>
+                        <div class="exchange">${stock.exchange}</div>
+                    </div>
+
+                    <div class="price">${stock.price.toLocaleString('vi-VN')} VND</div>
+
+                    <div class="metrics">
+                        <div class="metric">
+                            <div class="metric-label">10 ngày</div>
+                            <div class="metric-value ${stock.change_10d >= 0 ? 'positive' : 'negative'}">
+                                ${stock.change_10d >= 0 ? '+' : ''}${stock.change_10d}%
+                            </div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">30 ngày</div>
+                            <div class="metric-value ${stock.change_30d >= 0 ? 'positive' : 'negative'}">
+                                ${stock.change_30d >= 0 ? '+' : ''}${stock.change_30d}%
+                            </div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Vị trí</div>
+                            <div class="metric-value">${stock.position}%</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Vol Spike</div>
+                            <div class="metric-value">${stock.vol_spike}x</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Biến động</div>
+                            <div class="metric-value">${stock.volatility}%</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Vol Trend</div>
+                            <div class="metric-value ${stock.vol_trend >= 0 ? 'positive' : 'negative'}">
+                                ${stock.vol_trend >= 0 ? '+' : ''}${stock.vol_trend}%
+                            </div>
+                        </div>
+                    </div>
+
+                    ${stock.signals.length > 0 ? `
+                        <div class="signals">
+                            ${stock.signals.map(sig => `<span class="signal-tag">${sig}</span>`).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
